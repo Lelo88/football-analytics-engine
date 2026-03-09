@@ -165,3 +165,45 @@ PostgreSQL
 ↓
 Metabase
 
+## Container Architecture (C4-style)
+
+```mermaid
+flowchart TB
+
+    User[User / Analyst]
+
+    subgraph FootballAnalyticsSystem[Football Analytics System]
+        API[API Service<br/>Go<br/>Exposes analytics endpoints]
+        Ingestor[Ingestion Service<br/>Go<br/>Reads CSV and persists data]
+        Metabase[Metabase<br/>Dashboards and exploration]
+        DB[(PostgreSQL<br/>Match data and analytics storage)]
+    end
+
+    ExternalSource[Football-Data.co.uk<br/>Structured CSV Source]
+
+    User --> API
+    User --> Metabase
+
+    ExternalSource --> Ingestor
+    Ingestor --> DB
+    API --> DB
+    Metabase --> DB
+```
+
+## Internal Layering
+
+```mermaid
+flowchart LR
+
+    Delivery[Delivery Layer<br/>HTTP handlers, validation, response mapping]
+    UseCase[Use Case Layer<br/>Application workflows and business rules]
+    Ports[Ports Layer<br/>Interfaces for repositories and source readers]
+    Domain[Domain Layer<br/>Core entities and domain concepts]
+    Infra[Infrastructure Layer<br/>PostgreSQL repositories, HTTP CSV readers]
+
+    Delivery --> UseCase
+    UseCase --> Ports
+    UseCase --> Domain
+    Infra --> Ports
+    Ports --> Domain
+```
