@@ -61,43 +61,29 @@ Layers include:
 
 See `docs/architecture-rules.md`.
 
-## System Architecture
+## Container Architecture (C4-style)
 
 ```mermaid
 flowchart TB
 
-User[User / Analyst]
+    User[User / Analyst]
 
-subgraph Delivery
-API[HTTP API]
-end
+    subgraph FootballAnalyticsSystem[Football Analytics System]
+        API[API Service<br/>Go]
+        Ingestor[Ingestion Service<br/>Go]
+        Metabase[Metabase Dashboards]
+        DB[(PostgreSQL)]
+    end
 
-subgraph Application
-UseCases[Use Cases]
-Ports[Ports Interfaces]
-end
+    ExternalSource[Football-Data.co.uk<br/>CSV over HTTP]
 
-subgraph Domain
-DomainEntities[Domain Entities]
-end
+    User --> API
+    User --> Metabase
 
-subgraph Infrastructure
-PostgresRepo[Postgres Repositories]
-CSVSource[CSV Source Reader]
-end
-
-User --> API
-
-API --> UseCases
-UseCases --> Ports
-Ports --> DomainEntities
-
-PostgresRepo --> Ports
-CSVSource --> Ports
-
-PostgresRepo --> DB[(PostgreSQL)]
-
-DB --> Metabase[Metabase Dashboards]
+    ExternalSource --> Ingestor
+    Ingestor --> DB
+    API --> DB
+    Metabase --> DB
 ```
 
 ## Repository Structure
