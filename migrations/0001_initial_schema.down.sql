@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS match_odds;
+DROP TABLE IF EXISTS matches;
+DROP TABLE IF EXISTS ingestion_runs;
+DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS seasons;
+DROP TABLE IF EXISTS competitions;
