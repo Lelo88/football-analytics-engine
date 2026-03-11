@@ -75,3 +75,30 @@ Rationale:
 - rapid data exploration
 - dashboard creation without frontend development
 - direct querying of PostgreSQL
+
+## Decision 005 — Use plain SQL numbered migrations for the initial schema
+
+Context:
+The project needs database schema evolution for the MVP without adding extra Go tooling before repositories and infrastructure adapters exist.
+
+Decision:
+Use plain SQL migration files in `migrations/` with numbered `up` and `down` scripts.
+
+Rationale:
+- keeps the initial setup simple and explicit
+- avoids introducing migration framework complexity too early
+- makes schema review easy for both humans and AI agents
+- fits the current module scope focused only on schema definition
+
+## Decision 006 — Model football seasons with labels instead of single years
+
+Context:
+Football competitions usually span two calendar years, so a single numeric year is not a stable representation for season identity.
+
+Decision:
+Model seasons with a `label` such as `2024-2025` and enforce uniqueness by `(competition_id, label)`.
+
+Rationale:
+- matches how football seasons are commonly identified
+- avoids ambiguity for cross-year competitions
+- keeps future ingestion and analytics aligned with source data labels
