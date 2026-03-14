@@ -102,3 +102,17 @@ Rationale:
 - matches how football seasons are commonly identified
 - avoids ambiguity for cross-year competitions
 - keeps future ingestion and analytics aligned with source data labels
+
+## Decision 007 — Implement a dedicated Query Layer with reusable aggregated read repositories
+
+Context:
+The project needs analytics (team form, goals summary, over/under, season summaries) reusable by both API and dashboards without duplicating SQL logic.
+
+Decision:
+Implement a dedicated read repository contract in `ports` and PostgreSQL query adapters in `infra/postgres`, with filtering support for `last_n`, home/away/all venue, and season label.
+
+Rationale:
+- centralizes analytical SQL in one infrastructure component
+- keeps use cases independent from SQL details
+- prevents duplication of aggregation logic in delivery handlers or dashboards
+- improves testability of filter behavior and aggregate mapping
