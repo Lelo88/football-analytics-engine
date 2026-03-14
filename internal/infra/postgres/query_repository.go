@@ -18,6 +18,49 @@ func NewTeamAnalyticsReadRepository(db *sql.DB) *TeamAnalyticsReadRepository {
 	return &TeamAnalyticsReadRepository{db: db}
 }
 
+func (repository *TeamAnalyticsReadRepository) ListTeams(ctx context.Context) ([]domain.Team, error) {
+	rows, err := repository.db.QueryContext(ctx, `
+SELECT id, name, created_at
+FROM teams
+ORDER BY name`)
+	if err != nil {
+		return nil, fmt.Errorf("query teams: %w", err)
+	}
+	defer rows.Close()
+
+	teams := make([]domain.Team, 0)
+	for rows.Next() {
+		team := domain.Team{}
+		err = rows.Scan(&team.ID, &team.Name, &team.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("scan team: %w", err)
+		}
+
+		teams = append(teams, team)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate teams: %w", err)
+	}
+
+	return teams, nil
+}
+
+func (repository *TeamAnalyticsReadRepository) TeamExists(ctx context.Context, teamID int64) (bool, error) {
+	var exists bool
+	err := repository.db.QueryRowContext(ctx, `
+SELECT EXISTS(
+	SELECT 1
+	FROM teams
+	WHERE id = $1
+)`, teamID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("query team exists: %w", err)
+	}
+
+	return exists, nil
+}
+
 func (repository *TeamAnalyticsReadRepository) GetTeamForm(ctx context.Context, filter ports.TeamQueryFilter) (domain.TeamForm, error) {
 	baseQuery, args := buildTeamMatchesBaseQuery(filter.TeamID, normalizeVenue(filter.Venue), filter.SeasonLabel)
 	query := wrapWithLastN(baseQuery, filter.LastN)

@@ -16,6 +16,28 @@ func NewTeamAnalyticsService(repository ports.TeamAnalyticsReadRepository) *Team
 	return &TeamAnalyticsService{repository: repository}
 }
 
+func (service *TeamAnalyticsService) Teams(ctx context.Context) ([]domain.Team, error) {
+	result, err := service.repository.ListTeams(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list teams: %w", err)
+	}
+
+	return result, nil
+}
+
+func (service *TeamAnalyticsService) TeamExists(ctx context.Context, teamID int64) (bool, error) {
+	if teamID <= 0 {
+		return false, fmt.Errorf("team id must be greater than zero")
+	}
+
+	exists, err := service.repository.TeamExists(ctx, teamID)
+	if err != nil {
+		return false, fmt.Errorf("check team existence: %w", err)
+	}
+
+	return exists, nil
+}
+
 func (service *TeamAnalyticsService) TeamForm(ctx context.Context, filter ports.TeamQueryFilter) (domain.TeamForm, error) {
 	if err := validateTeamQueryFilter(filter); err != nil {
 		return domain.TeamForm{}, err
