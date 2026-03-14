@@ -5,12 +5,62 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"football-analytics/internal/domain"
 	"football-analytics/internal/ports"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
+
+func TestTeamAnalyticsReadRepositoryListTeams(t *testing.T) {
+	t.Parallel()
+
+	database, mock := newMockDB(t)
+	defer database.Close()
+
+	createdAt := time.Date(2026, time.March, 14, 10, 0, 0, 0, time.UTC)
+	rows := sqlmock.NewRows([]string{"id", "name", "created_at"}).
+		AddRow(int64(1), "Arsenal", createdAt).
+		AddRow(int64(2), "Chelsea", createdAt)
+
+	mock.ExpectQuery(queryPattern("SELECT id, name, created_at", "FROM teams", "ORDER BY name")).WillReturnRows(rows)
+
+	repository := NewTeamAnalyticsReadRepository(database)
+	teams, err := repository.ListTeams(context.Background())
+	if err != nil {
+		t.Fatalf("ListTeams returned error: %v", err)
+	}
+
+	if len(teams) != 2 || teams[0].Name != "Arsenal" || teams[1].ID != 2 {
+		t.Fatalf("unexpected teams: %+v", teams)
+	}
+
+	assertNoMockErrors(t, mock)
+}
+
+func TestTeamAnalyticsReadRepositoryTeamExists(t *testing.T) {
+	t.Parallel()
+
+	database, mock := newMockDB(t)
+	defer database.Close()
+
+	rows := sqlmock.NewRows([]string{"exists"}).AddRow(true)
+	mock.ExpectQuery(queryPattern("SELECT EXISTS(", "FROM teams", "WHERE id = $1", ")")).
+		WithArgs(int64(10)).
+		WillReturnRows(rows)
+
+	repository := NewTeamAnalyticsReadRepository(database)
+	exists, err := repository.TeamExists(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("TeamExists returned error: %v", err)
+	}
+	if !exists {
+		t.Fatal("expected team to exist")
+	}
+
+	assertNoMockErrors(t, mock)
+}
 
 func TestTeamAnalyticsReadRepositoryGetTeamForm(t *testing.T) {
 	t.Parallel()

@@ -28,6 +28,8 @@ type SeasonSummaryFilter struct {
 }
 
 type TeamAnalyticsReadRepository interface {
+	ListTeams(ctx context.Context) ([]domain.Team, error)
+	TeamExists(ctx context.Context, teamID int64) (bool, error)
 	GetTeamForm(ctx context.Context, filter TeamQueryFilter) (domain.TeamForm, error)
 	GetGoalsSummary(ctx context.Context, filter TeamQueryFilter) (domain.GoalsSummary, error)
 	GetOverUnderSummary(ctx context.Context, filter OverUnderQueryFilter) (domain.OverUnderSummary, error)
