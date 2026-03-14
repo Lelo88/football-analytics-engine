@@ -5,6 +5,11 @@ CREATE TABLE competitions (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- We normalize NULL country to empty string for uniqueness so that
+-- (name, NULL) and (name, '') are treated as the same logical competition.
+CREATE UNIQUE INDEX uq_competitions_name_country
+    ON competitions (name, COALESCE(country, ''));
+
 CREATE TABLE seasons (
     id BIGSERIAL PRIMARY KEY,
     competition_id BIGINT NOT NULL REFERENCES competitions(id),

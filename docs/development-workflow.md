@@ -86,3 +86,27 @@ A module is complete when:
 - tests pass where applicable
 - acceptance criteria are satisfied
 - documentation is updated if needed
+
+## CI and Branch Protection
+
+This repository uses two workflows:
+- `CI` in `.github/workflows/ci.yml` for full validation on `push` (`make ci`)
+- `PR Checks` in `.github/workflows/pr-checks.yml` for fast validation on `pull_request` (`make`)
+
+Recommended branch protection:
+
+For `main`:
+- require a pull request before merging
+- require approvals (minimum: 1)
+- require status checks: `PR Checks / quick-validate`
+- require branches to be up to date before merging
+
+For `develop`:
+- require a pull request before merging
+- require approvals (minimum: 1)
+- require status checks: `PR Checks / quick-validate`
+- require branches to be up to date before merging
+
+Notes:
+- do not require `CI / validate` as mandatory status check for PR merges, because `CI` runs on `push`
+- keep `CI` for full verification (including migration validation) after integration
