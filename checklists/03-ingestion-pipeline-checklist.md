@@ -1,44 +1,44 @@
 # Ingestion Pipeline Checklist
 
 ## Context
-- [ ] Read `specs/03-ingestion-pipeline.md`
+- [x] Read `specs/03-ingestion-pipeline.md`
 
 ## Design
-- [ ] Define source reader port
-- [ ] Define normalized input structure
-- [ ] Define ingestion use case responsibilities
-- [ ] Define repository contracts required by ingestion
+- [x] Define source reader port
+- [x] Define normalized input structure
+- [x] Define ingestion use case responsibilities
+- [x] Define repository contracts required by ingestion
 
 ## HTTP CSV Reader
-- [ ] Implement HTTP CSV streaming reader
-- [ ] Validate remote source response
-- [ ] Parse CSV header safely
-- [ ] Parse each row into typed structure
-- [ ] Handle malformed rows explicitly
+- [x] Implement HTTP CSV streaming reader
+- [x] Validate remote source response
+- [x] Parse CSV header safely
+- [x] Parse each row into typed structure
+- [x] Handle malformed rows explicitly
 
 ## Normalization
-- [ ] Normalize competition code
-- [ ] Normalize season label
-- [ ] Normalize team names
-- [ ] Define strategy for missing values
+- [x] Normalize competition code
+- [x] Normalize season label
+- [x] Normalize team names
+- [x] Define strategy for missing values
 
 ## Persistence Workflow
-- [ ] Create or reuse competition
-- [ ] Create or reuse season
-- [ ] Create or reuse teams
-- [ ] Upsert match
-- [ ] Upsert match odds if available
+- [x] Create or reuse competition
+- [x] Create or reuse season
+- [x] Create or reuse teams
+- [x] Upsert match
+- [x] Upsert match odds if available
 
 ## Ingestion Audit
-- [ ] Create ingestion run at start
-- [ ] Record rows read
-- [ ] Record rows inserted
-- [ ] Record rows updated
-- [ ] Mark run as success on completion
-- [ ] Mark run as failed on error
+- [x] Create ingestion run at start
+- [x] Record rows read
+- [x] Record rows inserted
+- [x] Record rows updated
+- [x] Mark run as success on completion
+- [x] Mark run as failed on error
 
 ## Tests
-- [ ] Test CSV parsing
-- [ ] Test normalization logic
-- [ ] Test rerun without duplicates
-- [ ] Test failed run is recorded
+- [x] Test CSV parsing
+- [x] Test normalization logic
+- [x] Test rerun without duplicates
+- [x] Test failed run is recorded
