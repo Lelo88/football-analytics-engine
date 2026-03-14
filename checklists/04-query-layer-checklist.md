@@ -1,28 +1,28 @@
 # Query Layer Checklist
 
 ## Context
-- [ ] Read `specs/04-query-layer.md`
+- [x] Read `specs/04-query-layer.md`
 
 ## Query Definitions
-- [ ] Define output contract for team form
-- [ ] Define output contract for goals summary
-- [ ] Define output contract for over/under
-- [ ] Define output contract for season summary
+- [x] Define output contract for team form
+- [x] Define output contract for goals summary
+- [x] Define output contract for over/under
+- [x] Define output contract for season summary
 
 ## Filters
-- [ ] Support `last_n`
-- [ ] Support home-only filter
-- [ ] Support away-only filter
-- [ ] Support all matches filter
-- [ ] Support season filtering
+- [x] Support `last_n`
+- [x] Support home-only filter
+- [x] Support away-only filter
+- [x] Support all matches filter
+- [x] Support season filtering
 
 ## Repository Design
-- [ ] Create read repository interfaces
-- [ ] Implement SQL queries in infrastructure layer
-- [ ] Ensure queries return domain-friendly structures
+- [x] Create read repository interfaces
+- [x] Implement SQL queries in infrastructure layer
+- [x] Ensure queries return domain-friendly structures
 
 ## Tests
-- [ ] Test team form correctness
-- [ ] Test home/away filtering
-- [ ] Test over/under correctness
-- [ ] Test season summary correctness
+- [x] Test team form correctness
+- [x] Test home/away filtering
+- [x] Test over/under correctness
+- [x] Test season summary correctness
