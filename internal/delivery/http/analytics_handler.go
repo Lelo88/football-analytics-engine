@@ -29,6 +29,9 @@ func NewHandler(useCase AnalyticsUseCase) http.Handler {
 	handler := &Handler{useCase: useCase}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", handler.redirectToUI)
+	mux.HandleFunc("GET /ui", handler.getUIHome)
+	mux.HandleFunc("GET /ui/team-summary", handler.getUITeamSummary)
 	mux.HandleFunc("GET /teams", handler.getTeams)
 	mux.HandleFunc("GET /teams/{id}/form", handler.getTeamForm)
 	mux.HandleFunc("GET /teams/{id}/overunder", handler.getTeamOverUnder)

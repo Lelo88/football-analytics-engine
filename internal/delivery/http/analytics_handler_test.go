@@ -6,6 +6,7 @@ import (
 	"fmt"
 	stdhttp "net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"football-analytics/internal/domain"
@@ -103,6 +104,94 @@ func TestGetTeamFormUnexpectedFailure(t *testing.T) {
 
 	if response.Code != stdhttp.StatusInternalServerError {
 		t.Fatalf("expected status 500, got %d", response.Code)
+	}
+}
+
+func TestGetUIHome(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(&fakeAnalyticsUseCase{
+		teams: []domain.Team{{ID: 1, Name: "Arsenal"}},
+	})
+
+	request := httptest.NewRequest(stdhttp.MethodGet, "/ui", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	if response.Code != stdhttp.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+
+	if !strings.Contains(response.Body.String(), "Football Analytics UI Lite") {
+		t.Fatalf("expected UI title in response body")
+	}
+}
+
+func TestGetUITeamSummary(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(&fakeAnalyticsUseCase{
+		teamExists: true,
+		teamForm: domain.TeamForm{
+			MatchesPlayed: 5,
+			Wins:          3,
+			Draws:         1,
+			Losses:        1,
+			Points:        10,
+			GoalsFor:      9,
+			GoalsAgainst:  4,
+		},
+		overUnder: domain.OverUnderSummary{
+			MatchesPlayed:   5,
+			Threshold:       2.5,
+			OverCount:       3,
+			UnderEqualCount: 2,
+		},
+		seasonSummaries: []domain.SeasonTeamSummary{{
+			SeasonLabel:   "2024-2025",
+			MatchesPlayed: 38,
+			Points:        72,
+			GoalsFor:      65,
+			GoalsAgainst:  40,
+		}},
+	})
+
+	request := httptest.NewRequest(stdhttp.MethodGet, "/ui/team-summary?team_id=1&last_n=5&venue=all&threshold=2.5", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	if response.Code != stdhttp.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+
+	if !strings.Contains(response.Body.String(), "Resumen del equipo #1") {
+		t.Fatalf("expected team summary title in response body")
+	}
+
+	if !strings.Contains(response.Body.String(), "season-summary-chart") {
+		t.Fatalf("expected chart canvas in response body")
+	}
+
+	if !strings.Contains(response.Body.String(), "new Chart") {
+		t.Fatalf("expected chart script in response body")
+	}
+}
+
+func TestGetUITeamSummaryInvalidTeamID(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(&fakeAnalyticsUseCase{})
+
+	request := httptest.NewRequest(stdhttp.MethodGet, "/ui/team-summary?team_id=abc", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	if response.Code != stdhttp.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+
+	if !strings.Contains(response.Body.String(), "team_id") {
+		t.Fatalf("expected validation message about team_id")
 	}
 }
 

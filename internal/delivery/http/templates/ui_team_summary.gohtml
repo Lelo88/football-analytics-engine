@@ -1,0 +1,148 @@
+{{define "team_summary"}}
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="h6 mb-1">Resumen del equipo #{{.TeamID}}</h3>
+        <p class="text-muted mb-0">Filtros aplicados: last_n={{.LastN}}, venue={{.Venue}}, threshold={{.Threshold}}{{if .SeasonLabel}}, season={{.SeasonLabel}}{{end}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">Team Form</h4>
+        <p class="mb-1">Matches: <strong>{{.Form.MatchesPlayed}}</strong></p>
+        <p class="mb-1">W/D/L: <strong>{{.Form.Wins}} / {{.Form.Draws}} / {{.Form.Losses}}</strong></p>
+        <p class="mb-0">Points: <strong>{{.Form.Points}}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">Goals</h4>
+        <p class="mb-1">GF: <strong>{{.Form.GoalsFor}}</strong></p>
+        <p class="mb-0">GA: <strong>{{.Form.GoalsAgainst}}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">Over/Under</h4>
+        <p class="mb-1">Matches: <strong>{{.OverUnder.MatchesPlayed}}</strong></p>
+        <p class="mb-1">Over: <strong>{{.OverUnder.OverCount}}</strong></p>
+        <p class="mb-0">Under/Equal: <strong>{{.OverUnder.UnderEqualCount}}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="h6">Season Summaries</h4>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Season</th>
+                <th>Matches</th>
+                <th>Points</th>
+                <th>GF</th>
+                <th>GA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{if .Summaries}}
+                {{range .Summaries}}
+                <tr>
+                  <td>{{.SeasonLabel}}</td>
+                  <td>{{.MatchesPlayed}}</td>
+                  <td>{{.Points}}</td>
+                  <td>{{.GoalsFor}}</td>
+                  <td>{{.GoalsAgainst}}</td>
+                </tr>
+                {{end}}
+              {{else}}
+                <tr>
+                  <td colspan="5" class="text-muted">No season summaries available.</td>
+                </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="h6">Season Trends</h4>
+        <canvas id="season-summary-chart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("season-summary-chart");
+  if (!canvas || typeof Chart === "undefined") {
+    return;
+  }
+
+  const labels = {{.SeasonLabels}};
+  const points = {{.SeasonPoints}};
+  const goalsFor = {{.SeasonGF}};
+  const goalsAgainst = {{.SeasonGA}};
+
+  if (window.teamSummaryChart) {
+    window.teamSummaryChart.destroy();
+  }
+
+  window.teamSummaryChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Points",
+          data: points,
+          tension: 0.2,
+        },
+        {
+          label: "Goals For",
+          data: goalsFor,
+          tension: 0.2,
+        },
+        {
+          label: "Goals Against",
+          data: goalsAgainst,
+          tension: 0.2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+})();
+</script>
+{{end}}
+
+{{define "ui_error"}}
+<div class="alert alert-danger mb-0" role="alert">
+  {{.}}
+</div>
+{{end}}

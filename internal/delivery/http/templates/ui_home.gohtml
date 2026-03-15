@@ -1,0 +1,73 @@
+{{define "title"}}Football Analytics UI Lite{{end}}
+
+{{define "content"}}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-2">UI Lite — Team Summary</h1>
+        <p class="text-muted mb-0">Filtros con HTMX sobre endpoints existentes del módulo 5 (sin recarga completa).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3">Filtros</h2>
+        <form class="row g-3"
+              hx-get="/ui/team-summary"
+              hx-target="#team-summary-result"
+              hx-swap="innerHTML"
+              hx-trigger="change delay:300ms, submit">
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="team_id">Equipo</label>
+            <select class="form-select" id="team_id" name="team_id" required>
+              <option value="">Selecciona un equipo</option>
+              {{range .Teams}}
+              <option value="{{.ID}}">{{.Name}}</option>
+              {{end}}
+            </select>
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="last_n">Last N</label>
+            <input class="form-control" type="number" id="last_n" name="last_n" value="5" min="1">
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="venue">Venue</label>
+            <select class="form-select" id="venue" name="venue">
+              <option value="all" selected>All</option>
+              <option value="home">Home</option>
+              <option value="away">Away</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="threshold">Threshold</label>
+            <input class="form-control" type="number" id="threshold" name="threshold" value="2.5" min="0" step="0.1">
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="season">Season</label>
+            <input class="form-control" type="text" id="season" name="season" placeholder="2024-2025">
+          </div>
+
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" id="team-summary-result">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <p class="text-muted mb-0">Selecciona un equipo para cargar el resumen dinámico.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
