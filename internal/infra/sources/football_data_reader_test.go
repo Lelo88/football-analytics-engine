@@ -164,6 +164,27 @@ func TestFootballDataReaderReadMatchesFallbackOddsColumns(t *testing.T) {
 	}
 }
 
+func TestFootballDataReaderReadMatchesWithUTF8BOMHeader(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		_, _ = writer.Write([]byte("\ufeffDiv,Date,HomeTeam,AwayTeam,FTHG,FTAG\nE0,18/08/2024,Arsenal,Chelsea,2,1\n"))
+	}))
+	defer server.Close()
+
+	reader := NewFootballDataReader(server.Client())
+	rows, err := reader.ReadMatches(context.Background(), server.URL)
+	if err != nil {
+		t.Fatalf("ReadMatches returned error: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(rows))
+	}
+	if rows[0].CompetitionCode != "E0" {
+		t.Fatalf("expected competition code E0, got %q", rows[0].CompetitionCode)
+	}
+}
+
 func TestNormalizeSeasonLabel(t *testing.T) {
 	t.Parallel()
 
