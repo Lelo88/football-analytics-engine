@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"football-analytics/internal/domain"
+	"football-analytics/internal/ports"
 )
 
 func TestIngestionServiceIngestSuccess(t *testing.T) {
@@ -172,6 +173,50 @@ func TestIngestionServiceIngestEmptyList(t *testing.T) {
 	}
 }
 
+func TestIngestionServiceIngestWithStats(t *testing.T) {
+	t.Parallel()
+
+	matches := []domain.IngestionMatch{
+		{
+			CompetitionName: "Premier League",
+			Country:         "England",
+			SeasonLabel:     "2024-2025",
+			MatchDate:       time.Date(2024, time.August, 18, 0, 0, 0, 0, time.UTC),
+			HomeTeamName:    "Arsenal",
+			AwayTeamName:    "Chelsea",
+		},
+		{
+			CompetitionName: "Premier League",
+			Country:         "England",
+			SeasonLabel:     "2024-2025",
+			MatchDate:       time.Date(2024, time.August, 19, 0, 0, 0, 0, time.UTC),
+			HomeTeamName:    "Liverpool",
+			AwayTeamName:    "Tottenham",
+		},
+		{
+			CompetitionName: "Premier League",
+			Country:         "England",
+			SeasonLabel:     "2024-2025",
+			MatchDate:       time.Date(2024, time.August, 20, 0, 0, 0, 0, time.UTC),
+			HomeTeamName:    "Aston Villa",
+			AwayTeamName:    "Brighton",
+		},
+	}
+
+	reader := &fakeReader{matches: matches}
+	repository := &fakeRepository{saveResults: []ports.IngestionSaveResult{{Inserted: true}, {Updated: true}, {}}}
+	service := NewIngestionService(reader, repository)
+
+	stats, err := service.IngestWithStats(context.Background())
+	if err != nil {
+		t.Fatalf("IngestWithStats returned error: %v", err)
+	}
+
+	if stats.RowsProcessed != 3 || stats.RowsInserted != 1 || stats.RowsUpdated != 1 {
+		t.Fatalf("unexpected stats: %+v", stats)
+	}
+}
+
 type fakeReader struct {
 	matches    []domain.IngestionMatch
 	err        error
@@ -191,13 +236,20 @@ type fakeRepository struct {
 	saveCalls    int
 	errAtCall    int
 	err          error
+	saveResults  []ports.IngestionSaveResult
 }
 
-func (repository *fakeRepository) Save(ctx context.Context, match domain.IngestionMatch) error {
+func (repository *fakeRepository) Save(ctx context.Context, match domain.IngestionMatch) (ports.IngestionSaveResult, error) {
 	repository.saveCalls++
 	if repository.err != nil && repository.saveCalls == repository.errAtCall {
-		return repository.err
+		return ports.IngestionSaveResult{}, repository.err
 	}
 	repository.savedMatches = append(repository.savedMatches, match)
-	return nil
+
+	index := repository.saveCalls - 1
+	if index >= 0 && index < len(repository.saveResults) {
+		return repository.saveResults[index], nil
+	}
+
+	return ports.IngestionSaveResult{}, nil
 }

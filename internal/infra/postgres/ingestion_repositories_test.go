@@ -175,6 +175,58 @@ func TestMatchRepositoryUpsertMatchInserted(t *testing.T) {
 	assertNoMockErrors(t, mock)
 }
 
+func TestMatchRepositoryUpsertMatchIdempotentNoChanges(t *testing.T) {
+	t.Parallel()
+
+	database, mock := newMockDB(t)
+	defer database.Close()
+
+	createdAt := time.Date(2026, time.March, 13, 10, 0, 0, 0, time.UTC)
+	matchDate := time.Date(2024, time.August, 18, 0, 0, 0, 0, time.UTC)
+	rows := sqlmock.NewRows([]string{"id", "competition_id", "season_id", "match_date", "home_team_id", "away_team_id", "home_goals", "away_goals", "created_at", "inserted", "updated"}).AddRow(int64(5), int64(1), int64(2), matchDate, int64(10), int64(20), int64(2), int64(1), createdAt, false, false)
+	mock.ExpectQuery(regexp.QuoteMeta(`WITH upserted AS (
+			INSERT INTO matches (
+				competition_id,
+				season_id,
+				match_date,
+				home_team_id,
+				away_team_id,
+				home_goals,
+				away_goals
+			) VALUES ($1, $2, $3, $4, $5, $6, $7)
+			ON CONFLICT ON CONSTRAINT matches_logical_identity_key
+			DO UPDATE SET
+				home_goals = EXCLUDED.home_goals,
+				away_goals = EXCLUDED.away_goals
+			WHERE matches.home_goals IS DISTINCT FROM EXCLUDED.home_goals
+			   OR matches.away_goals IS DISTINCT FROM EXCLUDED.away_goals
+			RETURNING id, competition_id, season_id, match_date, home_team_id, away_team_id, home_goals, away_goals, created_at, (xmax = 0) AS inserted, (xmax <> 0) AS updated
+		)
+		SELECT id, competition_id, season_id, match_date, home_team_id, away_team_id, home_goals, away_goals, created_at, inserted, updated
+		FROM upserted
+		UNION ALL
+		SELECT id, competition_id, season_id, match_date, home_team_id, away_team_id, home_goals, away_goals, created_at, FALSE AS inserted, FALSE AS updated
+		FROM matches
+		WHERE competition_id = $1
+		  AND season_id = $2
+		  AND match_date = $3
+		  AND home_team_id = $4
+		  AND away_team_id = $5
+		  AND NOT EXISTS (SELECT 1 FROM upserted)
+		LIMIT 1`)).WithArgs(int64(1), int64(2), matchDate, int64(10), int64(20), intPtrValue(2), intPtrValue(1)).WillReturnRows(rows)
+
+	repository := NewMatchRepository(database)
+	result, err := repository.UpsertMatch(context.Background(), ports.MatchUpsertParams{CompetitionID: 1, SeasonID: 2, MatchDate: matchDate, HomeTeamID: 10, AwayTeamID: 20, HomeGoals: intPtrValue(2), AwayGoals: intPtrValue(1)})
+	if err != nil {
+		t.Fatalf("UpsertMatch returned error: %v", err)
+	}
+	if result.Inserted || result.Updated {
+		t.Fatalf("expected idempotent upsert flags inserted=false updated=false, got %+v", result)
+	}
+
+	assertNoMockErrors(t, mock)
+}
+
 func TestMatchRepositoryUpsertMatchOdds(t *testing.T) {
 	t.Parallel()
 

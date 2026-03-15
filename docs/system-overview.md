@@ -92,8 +92,10 @@ Characteristics:
 - normalization of team and competition data
 - idempotent database writes
 - ingestion audit tracking
+- contextual lifecycle logs (start, success, failure)
 
 The ingestion process records execution metadata in the `ingestion_runs` table.
+Each run is correlated with runtime logs through a shared `run_id` and row counters.
 
 ## Database Design Principles
 

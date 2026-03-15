@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"football-analytics/internal/domain"
+	"football-analytics/internal/ports"
 )
 
 type Reader interface {
@@ -13,7 +14,13 @@ type Reader interface {
 }
 
 type MatchRepository interface {
-	Save(ctx context.Context, match domain.IngestionMatch) error
+	Save(ctx context.Context, match domain.IngestionMatch) (ports.IngestionSaveResult, error)
+}
+
+type IngestionStats struct {
+	RowsProcessed int
+	RowsInserted  int
+	RowsUpdated   int
 }
 
 type IngestionService struct {
@@ -32,24 +39,40 @@ func NewIngestionService(
 }
 
 func (service *IngestionService) Ingest(ctx context.Context) error {
+	_, err := service.IngestWithStats(ctx)
+	return err
+}
+
+func (service *IngestionService) IngestWithStats(ctx context.Context) (IngestionStats, error) {
+	stats := IngestionStats{}
+
 	matches, err := service.reader.Fetch(ctx)
 	if err != nil {
-		return fmt.Errorf("fetch matches: %w", err)
+		return stats, fmt.Errorf("fetch matches: %w", err)
 	}
 
 	for index, match := range matches {
+		stats.RowsProcessed++
+
 		err := validateMatch(match)
 		if err != nil {
-			return fmt.Errorf("validate match %d: %w", index, err)
+			return stats, fmt.Errorf("validate match %d: %w", index, err)
 		}
 
-		err = service.repository.Save(ctx, match)
+		saveResult, err := service.repository.Save(ctx, match)
 		if err != nil {
-			return fmt.Errorf("save match %d: %w", index, err)
+			return stats, fmt.Errorf("save match %d: %w", index, err)
+		}
+
+		if saveResult.Inserted {
+			stats.RowsInserted++
+		}
+		if saveResult.Updated {
+			stats.RowsUpdated++
 		}
 	}
 
-	return nil
+	return stats, nil
 }
 
 func validateMatch(match domain.IngestionMatch) error {

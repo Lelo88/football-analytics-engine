@@ -116,3 +116,17 @@ Rationale:
 - keeps use cases independent from SQL details
 - prevents duplication of aggregation logic in delivery handlers or dashboards
 - improves testability of filter behavior and aggregate mapping
+
+## Decision 008 — Record ingestion execution lifecycle with audit rows and contextual logs
+
+Context:
+Operational troubleshooting requires visibility into each ingestion execution, including start/end status and processed row counters.
+
+Decision:
+Record each ingestion run in `ingestion_runs` and emit contextual logs with `run_id`, source URL, and row metrics (`processed`, `inserted`, `updated`) on success and failure.
+
+Rationale:
+- enables traceability of ingestion outcomes across reruns
+- improves failure diagnosis with structured operational context
+- aligns runtime logs with persisted audit data
+- keeps observability baseline simple without introducing external logging infrastructure

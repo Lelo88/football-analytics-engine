@@ -66,6 +66,11 @@ type MatchRepository interface {
 	UpsertMatchOdds(ctx context.Context, params MatchOddsUpsertParams) error
 }
 
+type IngestionSaveResult struct {
+	Inserted bool
+	Updated  bool
+}
+
 type IngestionRunRepository interface {
 	Create(ctx context.Context, source string) (domain.IngestionRun, error)
 	MarkSuccess(ctx context.Context, runID int64, rowsProcessed int, rowsInserted int, rowsUpdated int) error

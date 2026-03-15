@@ -101,3 +101,55 @@ README.md
 ```
 
 See `PROJECT_MAP.md` for the full map.
+
+## Run Instructions
+
+1. Start local dependencies:
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d postgres
+```
+
+2. Apply migrations (from repository root):
+
+```bash
+for file in migrations/*.up.sql; do
+  psql postgresql://postgres:postgres@localhost:5432/football_analytics?sslmode=disable -f "$file"
+done
+```
+
+3. Run ingestion:
+
+```bash
+go run ./cmd/ingester
+```
+
+Optional environment variables:
+
+- `POSTGRES_HOST` (default `localhost`)
+- `POSTGRES_PORT` (default `5432`)
+- `POSTGRES_DB` (default `football_analytics`)
+- `POSTGRES_USER` (default `postgres`)
+- `POSTGRES_PASSWORD` (default `postgres`)
+- `POSTGRES_SSLMODE` (default `disable`)
+- `INGESTION_SOURCE_URL` (default Premier League CSV URL)
+
+4. Run API service:
+
+```bash
+go run ./cmd/api
+```
+
+## Test Instructions
+
+Run all tests:
+
+```bash
+go test ./...
+```
+
+Run focused quality suites:
+
+```bash
+go test ./internal/infra/sources ./internal/infra/postgres ./internal/delivery/http ./internal/usecase
+```
