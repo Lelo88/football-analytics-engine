@@ -68,6 +68,7 @@ func (reader *FootballDataReader) ReadMatches(ctx context.Context, sourceURL str
 	if err != nil {
 		return nil, fmt.Errorf("create source request: %w", err)
 	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
 
 	resp, err := reader.client.Do(req)
 	if err != nil {
@@ -124,7 +125,7 @@ func (reader *FootballDataReader) ReadMatches(ctx context.Context, sourceURL str
 func buildHeaderIndex(headers []string) (map[string]int, error) {
 	indexByHeader := make(map[string]int, len(headers))
 	for index, header := range headers {
-		normalized := strings.TrimSpace(header)
+		normalized := normalizeHeaderName(header)
 		if normalized == "" {
 			continue
 		}
@@ -140,6 +141,12 @@ func buildHeaderIndex(headers []string) (map[string]int, error) {
 	}
 
 	return indexByHeader, nil
+}
+
+func normalizeHeaderName(header string) string {
+	trimmed := strings.TrimSpace(header)
+	trimmed = strings.TrimPrefix(trimmed, "\ufeff")
+	return strings.TrimSpace(trimmed)
 }
 
 func parseSourceMatchRow(record []string, indexByHeader map[string]int) (ports.SourceMatchRow, error) {
