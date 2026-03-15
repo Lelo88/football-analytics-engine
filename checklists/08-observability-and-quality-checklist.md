@@ -1,22 +1,22 @@
 # Observability and Quality Checklist
 
 ## Context
-- [ ] Read `specs/08-observability-and-quality.md`
+- [x] Read `specs/08-observability-and-quality.md`
 
 ## Logging
-- [ ] Define logging strategy
-- [ ] Log ingestion start
-- [ ] Log ingestion end
-- [ ] Log ingestion failure with context
+- [x] Define logging strategy
+- [x] Log ingestion start
+- [x] Log ingestion end
+- [x] Log ingestion failure with context
 
 ## Tests
-- [ ] Add parser tests
-- [ ] Add idempotency tests
-- [ ] Add query correctness tests
-- [ ] Add API handler tests
+- [x] Add parser tests
+- [x] Add idempotency tests
+- [x] Add query correctness tests
+- [x] Add API handler tests
 
 ## Documentation
-- [ ] Update README with run instructions
-- [ ] Update README with test instructions
-- [ ] Update docs when architecture changes
-- [ ] Update decision log when major decisions are made
+- [x] Update README with run instructions
+- [x] Update README with test instructions
+- [x] Update docs when architecture changes
+- [x] Update decision log when major decisions are made

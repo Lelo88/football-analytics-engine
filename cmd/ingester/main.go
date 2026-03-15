@@ -18,6 +18,7 @@ import (
 )
 
 const defaultFootballDataURL = "https://www.football-data.co.uk/mmz4281/2425/E0.csv"
+const runFinalizationTimeout = 15 * time.Second
 
 type config struct {
 	postgresHost     string
@@ -52,13 +53,30 @@ func main() {
 		reader,
 		postgres.NewIngestionMatchRepository(database),
 	)
+	runRepository := postgres.NewIngestionRunRepository(database)
 
-	err = service.Ingest(ctx)
+	run, err := runRepository.Create(ctx, cfg.sourceURL)
 	if err != nil {
-		log.Fatalf("run ingestion: %v", err)
+		log.Fatalf("create ingestion run: %v", err)
 	}
 
-	log.Printf("ingestion completed")
+	log.Printf("ingestion started run_id=%d source=%s", run.ID, cfg.sourceURL)
+
+	stats, err := service.IngestWithStats(ctx)
+	if err != nil {
+		markFailedErr := markRunFailed(runRepository, run.ID, stats, err)
+		if markFailedErr != nil {
+			log.Printf("mark ingestion run failed run_id=%d err=%v", run.ID, markFailedErr)
+		}
+		log.Fatalf("ingestion failed run_id=%d rows_processed=%d rows_inserted=%d rows_updated=%d err=%v", run.ID, stats.RowsProcessed, stats.RowsInserted, stats.RowsUpdated, err)
+	}
+
+	err = markRunSuccess(runRepository, run.ID, stats)
+	if err != nil {
+		log.Fatalf("mark ingestion run success run_id=%d: %v", run.ID, err)
+	}
+
+	log.Printf("ingestion completed run_id=%d rows_processed=%d rows_inserted=%d rows_updated=%d", run.ID, stats.RowsProcessed, stats.RowsInserted, stats.RowsUpdated)
 }
 
 func loadConfig() config {
@@ -95,4 +113,28 @@ func getenvDefault(key string, fallback string) string {
 	}
 
 	return value
+}
+
+type ingestionRunFinalizer interface {
+	MarkSuccess(ctx context.Context, runID int64, rowsProcessed int, rowsInserted int, rowsUpdated int) error
+	MarkFailed(ctx context.Context, runID int64, rowsProcessed int, rowsInserted int, rowsUpdated int, errorMessage string) error
+}
+
+func markRunFailed(runRepository ingestionRunFinalizer, runID int64, stats usecase.IngestionStats, ingestionErr error) error {
+	return finalizeRun(func(ctx context.Context) error {
+		return runRepository.MarkFailed(ctx, runID, stats.RowsProcessed, stats.RowsInserted, stats.RowsUpdated, ingestionErr.Error())
+	})
+}
+
+func markRunSuccess(runRepository ingestionRunFinalizer, runID int64, stats usecase.IngestionStats) error {
+	return finalizeRun(func(ctx context.Context) error {
+		return runRepository.MarkSuccess(ctx, runID, stats.RowsProcessed, stats.RowsInserted, stats.RowsUpdated)
+	})
+}
+
+func finalizeRun(action func(ctx context.Context) error) error {
+	ctx, cancel := context.WithTimeout(context.Background(), runFinalizationTimeout)
+	defer cancel()
+
+	return action(ctx)
 }
